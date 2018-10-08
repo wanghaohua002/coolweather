@@ -36,11 +36,12 @@ public abstract class HttpCallBack implements Callback {
 
   @Override
   public void onResponse(final Call call, final Response response) throws IOException {
+    final String responseString = response.body().string();
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
         try {
-          onResult(call, response);
+          onResult(call, responseString);
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -50,5 +51,5 @@ public abstract class HttpCallBack implements Callback {
 
   public abstract void onFail(Call call, IOException e);
 
-  public abstract void onResult(Call call, Response response) throws IOException;
+  public abstract void onResult(Call call, String response) throws IOException;
 }

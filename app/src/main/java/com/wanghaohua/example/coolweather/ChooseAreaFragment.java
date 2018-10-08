@@ -1,5 +1,6 @@
 package com.wanghaohua.example.coolweather;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -88,6 +89,10 @@ public class ChooseAreaFragment extends Fragment {
         } else if (mCurrentLevel == LEVEL_CITY) {
           mSelectedCity = mCityList.get(position);
           queryCounties();
+        } else if (mCurrentLevel == LEVEL_COUNTY) {
+          String url = "http://guolin.tech/api/weather?cityid=" + mCountyList.get(position).getWeatherId() + "&key=" + ConstantUtil.WEATHER_KEY;
+          WeatherActivity.start(getActivity(), url);
+          getActivity().finish();
         }
       }
     });
@@ -129,8 +134,8 @@ public class ChooseAreaFragment extends Fragment {
         }
 
         @Override
-        public void onResult(Call call, Response response) throws IOException {
-          boolean result = GsonUtil.handleProvinceRespone(response.body().string());
+        public void onResult(Call call, String response) throws IOException {
+          boolean result = GsonUtil.handleProvinceRespone(response);
           mProgressBar.dismiss();
           if (result) {
             queryProvinces();
@@ -165,8 +170,8 @@ public class ChooseAreaFragment extends Fragment {
             }
 
             @Override
-            public void onResult(Call call, Response response) throws IOException {
-              boolean result = GsonUtil.handleCityResponse(response.body().string(), mSelectedProvince.getId());
+            public void onResult(Call call, String response) throws IOException {
+              boolean result = GsonUtil.handleCityResponse(response, mSelectedProvince.getId());
               mProgressBar.dismiss();
               if (result) {
                 queryCities();
@@ -201,8 +206,8 @@ public class ChooseAreaFragment extends Fragment {
             }
 
             @Override
-            public void onResult(Call call, Response response) throws IOException {
-              boolean result = GsonUtil.handleCountyResponse(response.body().string(), mSelectedCity.getId());
+            public void onResult(Call call, String response) throws IOException {
+              boolean result = GsonUtil.handleCountyResponse(response, mSelectedCity.getId());
               mProgressBar.dismiss();
               if (result) {
                 queryCounties();

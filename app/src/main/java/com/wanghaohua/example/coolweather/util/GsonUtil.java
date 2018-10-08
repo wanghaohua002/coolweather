@@ -2,9 +2,13 @@ package com.wanghaohua.example.coolweather.util;
 
 import android.text.TextUtils;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.wanghaohua.example.coolweather.database.City;
 import com.wanghaohua.example.coolweather.database.County;
 import com.wanghaohua.example.coolweather.database.Province;
+import com.wanghaohua.example.coolweather.model.ListVo;
+import com.wanghaohua.example.coolweather.model.WeatherVo;
+import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -97,5 +101,10 @@ public class GsonUtil {
       }
     }
     return false;
+  }
+
+  public static WeatherVo handleWeatherResponse(String response) {
+    ListVo<WeatherVo> weatherVoListVo =  getInstance().fromJson(response, new TypeToken<ListVo<WeatherVo>>() {}.getType());
+    return weatherVoListVo.list.get(0);
   }
 }
