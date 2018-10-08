@@ -58,6 +58,8 @@ public class ChooseAreaFragment extends Fragment {
   private City mSelectedCity;
   private int mCurrentLevel;
 
+  private OnBackPressedListener mOnBackPressedListener;
+
   @Nullable
   @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -77,6 +79,10 @@ public class ChooseAreaFragment extends Fragment {
     mProgressBar = new MyProgressBar(getActivity());
   }
 
+  public void setListener(OnBackPressedListener listener) {
+    this.mOnBackPressedListener = listener;
+  }
+
   @Override
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
@@ -90,9 +96,16 @@ public class ChooseAreaFragment extends Fragment {
           mSelectedCity = mCityList.get(position);
           queryCounties();
         } else if (mCurrentLevel == LEVEL_COUNTY) {
-          String url = "http://guolin.tech/api/weather?cityid=" + mCountyList.get(position).getWeatherId() + "&key=" + ConstantUtil.WEATHER_KEY;
-          WeatherActivity.start(getActivity(), url);
-          getActivity().finish();
+          String weatherId = mCountyList.get(position).getWeatherId();
+          if (getActivity() instanceof MainActivity) {
+            WeatherActivity.start(getActivity(), weatherId);
+            getActivity().finish();
+          } else if (getActivity() instanceof WeatherActivity) {
+            WeatherActivity activity = (WeatherActivity) getActivity();
+            activity.mDrawLayout.closeDrawers();
+            activity.mSwipeRefreshLayout.setRefreshing(true);
+            activity.requestWeather(weatherId);
+          }
         }
       }
     });
@@ -110,6 +123,12 @@ public class ChooseAreaFragment extends Fragment {
       queryCities();
     } else if (mCurrentLevel == LEVEL_CITY) {
       queryProvinces();
+    } else {
+      if (mOnBackPressedListener != null) {
+        mOnBackPressedListener.onBackPressed();
+      } else {
+        getActivity().finish();
+      }
     }
   }
 
@@ -220,5 +239,9 @@ public class ChooseAreaFragment extends Fragment {
   @Override
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
+  }
+
+  public interface OnBackPressedListener {
+    void onBackPressed();
   }
 }

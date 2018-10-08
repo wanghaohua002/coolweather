@@ -1,6 +1,7 @@
 package com.wanghaohua.example.coolweather;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -8,10 +9,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -35,6 +40,9 @@ import okhttp3.Response;
  */
 public class WeatherActivity extends AppCompatActivity {
 
+  public DrawerLayout mDrawLayout;
+  private Button mBtnNav;
+  public SwipeRefreshLayout mSwipeRefreshLayout;
   private ImageView mIvBingPic;
   private TextView mTvTitle;
   private TextView mTvUpdateTime;
@@ -47,12 +55,15 @@ public class WeatherActivity extends AppCompatActivity {
   private TextView mTvCarWash;
   private TextView mTvSport;
 
-  private MyProgressBar mProgressBar;
   private WeatherVo mWeather;
 
-  public static void start(Activity activity, String url) {
+  private String mWeatherId;
+
+  private ChooseAreaFragment mFragment;
+
+  public static void start(Activity activity, String weatherId) {
     Intent intent = new Intent(activity, WeatherActivity.class);
-    intent.putExtra(ConstantUtil.URL, url);
+    intent.putExtra(ConstantUtil.EXTRA_WEATHER_ID, weatherId);
     activity.startActivity(intent);
   }
 
@@ -66,16 +77,26 @@ public class WeatherActivity extends AppCompatActivity {
     }
     setContentView(R.layout.activity_weather);
     initView();
+    mFragment = new ChooseAreaFragment();
+    mFragment.setListener(new ChooseAreaFragment.OnBackPressedListener() {
+      @Override
+      public void onBackPressed() {
+        mDrawLayout.closeDrawers();
+      }
+    });
+    getSupportFragmentManager().beginTransaction()
+        .replace(R.id.fl_container, mFragment)
+        .commitAllowingStateLoss();
     SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-    mProgressBar = new MyProgressBar(this);
     String bingPic = preferences.getString(ConstantUtil.BACKGROUND_PIC, "");
     String weatherString = preferences.getString(ConstantUtil.PREF_WEATHER, "");
     if (!TextUtils.isEmpty(weatherString)) {
       mWeather = GsonUtil.handleWeatherResponse(weatherString);
+      mWeatherId = mWeather.basic.id;
       showWeather();
     } else {
-      String url = getIntent().getStringExtra(ConstantUtil.URL);
-      requestWeather(url);
+      mWeatherId = getIntent().getStringExtra(ConstantUtil.EXTRA_WEATHER_ID);
+      requestWeather();
     }
     if (!TextUtils.isEmpty(bingPic)) {
       Glide.with(this).load(bingPic).into(mIvBingPic);
@@ -84,7 +105,20 @@ public class WeatherActivity extends AppCompatActivity {
     }
   }
 
+  @Override
+  public void onBackPressed() {
+    if (mDrawLayout.isDrawerOpen(findViewById(R.id.fl_container)) && mFragment != null) {
+      mFragment.onBackPressed();
+    } else {
+      super.onBackPressed();
+    }
+  }
+
   private void initView() {
+    mDrawLayout = findViewById(R.id.drawer_layout);
+    mBtnNav = findViewById(R.id.btn_nav);
+    mSwipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+    mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
     mIvBingPic = findViewById(R.id.iv_bing_pic);
     mTvTitle = findViewById(R.id.tv_title);
     mTvUpdateTime = findViewById(R.id.tv_update_time);
@@ -96,6 +130,18 @@ public class WeatherActivity extends AppCompatActivity {
     mTvComfort = findViewById(R.id.tv_comfort);
     mTvCarWash = findViewById(R.id.tv_car_wash);
     mTvSport = findViewById(R.id.tv_sport);
+    mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+      @Override
+      public void onRefresh() {
+        requestWeather();
+      }
+    });
+    mBtnNav.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        mDrawLayout.openDrawer(Gravity.LEFT);
+      }
+    });
   }
 
   private void showWeather() {
@@ -128,31 +174,36 @@ public class WeatherActivity extends AppCompatActivity {
     mTvSport.setText("运动建议：" + mWeather.suggestion.sport.txt);
   }
 
-  private void requestWeather(String url) {
-    if (TextUtils.isEmpty(url)) {
+  private void requestWeather() {
+    requestWeather(mWeatherId);
+  }
+
+  public void requestWeather(String weatherId) {
+    if (TextUtils.isEmpty(weatherId)) {
       return;
     }
-    mProgressBar.show();
+    String url = "http://guolin.tech/api/weather?cityid=" + weatherId + "&key=" + ConstantUtil.WEATHER_KEY;
     HttpUtil.sendOkHttpRequest(url, new HttpCallBack() {
       @Override
       public void onFail(Call call, IOException e) {
-        mProgressBar.dismiss();
         Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_LONG).show();
+        mSwipeRefreshLayout.setRefreshing(false);
       }
 
       @Override
       public void onResult(Call call, String response) throws IOException {
-        mProgressBar.dismiss();
         mWeather = GsonUtil.handleWeatherResponse(response);
         if (mWeather != null && ConstantUtil.OK.equals(mWeather.status)) {
           SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this);
           SharedPreferences.Editor editor = preferences.edit();
           editor.putString(ConstantUtil.PREF_WEATHER, response);
           editor.apply();
+          mWeatherId = mWeather.basic.id;
           showWeather();
         } else {
           Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_LONG).show();
         }
+        mSwipeRefreshLayout.setRefreshing(false);
       }
     });
     loadBingPic();

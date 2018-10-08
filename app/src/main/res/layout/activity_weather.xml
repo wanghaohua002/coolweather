@@ -10,52 +10,83 @@
     android:layout_height="match_parent"
     android:scaleType="centerCrop"/>
 
-  <ScrollView
-    android:id="@+id/sl_weather"
+  <android.support.v4.widget.DrawerLayout
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:scrollbars="none">
+    android:layout_height="match_parent">
 
-    <LinearLayout
-      android:orientation="vertical"
+    <android.support.v4.widget.SwipeRefreshLayout
+      android:id="@+id/swipe_refresh_layout"
       android:layout_width="match_parent"
+      android:layout_height="match_parent">
+
+      <ScrollView
+        android:id="@+id/sl_weather"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="none">
+
+        <LinearLayout
+          android:orientation="vertical"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:fitsSystemWindows="true">
+
+          <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize">
+
+            <TextView
+              android:id="@+id/tv_title"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_centerInParent="true"
+              android:textColor="#ffffff"
+              android:textSize="20sp"/>
+
+            <TextView
+              android:id="@+id/tv_update_time"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_marginRight="10dp"
+              android:layout_alignParentRight="true"
+              android:layout_centerVertical="true"
+              android:textColor="#ffffff"
+              android:textSize="16sp"/>
+
+            <Button
+              android:id="@+id/btn_nav"
+              android:layout_width="30dp"
+              android:layout_height="30dp"
+              android:layout_marginLeft="10dp"
+              android:layout_alignParentLeft="true"
+              android:layout_centerVertical="true"
+              android:background="@drawable/icon_menu"
+              />
+
+          </RelativeLayout>
+
+          <include layout="@layout/part_now"/>
+
+          <include layout="@layout/part_forecast"/>
+
+          <include layout="@layout/part_aqi"/>
+
+          <include layout="@layout/part_suggestion"/>
+
+        </LinearLayout>
+
+      </ScrollView>
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+    <FrameLayout
+      android:id="@+id/fl_container"
+      android:layout_width="180dp"
       android:layout_height="match_parent"
-      android:fitsSystemWindows="true">
+      android:layout_gravity="left" />
 
-      <RelativeLayout
-      android:layout_width="match_parent"
-      android:layout_height="?attr/actionBarSize">
+  </android.support.v4.widget.DrawerLayout>
 
-        <TextView
-          android:id="@+id/tv_title"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_centerInParent="true"
-          android:textColor="#ffffff"
-          android:textSize="20sp"/>
 
-        <TextView
-          android:id="@+id/tv_update_time"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_marginRight="10dp"
-          android:layout_alignParentRight="true"
-          android:layout_centerVertical="true"
-          android:textColor="#ffffff"
-          android:textSize="16sp"/>
-
-      </RelativeLayout>
-
-      <include layout="@layout/part_now"/>
-
-      <include layout="@layout/part_forecast"/>
-
-      <include layout="@layout/part_aqi"/>
-
-      <include layout="@layout/part_suggestion"/>
-
-    </LinearLayout>
-
-  </ScrollView>
 
 </FrameLayout>

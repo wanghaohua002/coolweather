@@ -14,4 +14,5 @@ public class ConstantUtil {
   public static final String PREF_WEATHER = "weather";
   public static final String BACKGROUND_PIC = "bing_pic";
   public static final String URL_BING_PIC = "http://guolin.tech/api/bing_pic";
+  public static final String EXTRA_WEATHER_ID = "weather_id";
 }
